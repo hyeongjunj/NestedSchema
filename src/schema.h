@@ -51,7 +51,6 @@ public:
                 {
                   SetType(data_type, true);
                   SetValue(value);
-                  //SetDataGroup(true);
                 }
 };
 
@@ -62,9 +61,8 @@ public:
   Array() {
     SetType("ARRAY", false);
   }
-
-  void Add2Array(Data* dt) {
-    array_.push_back(dt);
+  void Add2Array(Data* data) {
+    array_.push_back(data);
   }
 };
 
@@ -72,6 +70,7 @@ class Struct : public Data {
 private:
   std::vector<Data*> struct_;
   std::vector<std::string> field_name_;
+  std::vector<int> offset_;
 public:
   Struct() {
     SetType("STRUCT", false);
@@ -87,6 +86,7 @@ public:
 class Map : public Data {
 private:
   std::vector<Data*> map_;
+  int offset_[2];
 public:
   Map(Data* key, Data* value) {
     map_.push_back(key);

@@ -1,8 +1,6 @@
 #include "encoding.h"
 
 int main() {
-  Primitive* p1 = new Primitive("STRING", "v1");
-  Primitive* p2 = new Primitive("STRING", "v1-1");
   Struct* a1 = new Struct();
   a1->Add2Struct("street", new Primitive("STRING", "v2"));
   a1->Add2Struct("city", new Primitive("STRING", "v3"));
@@ -17,9 +15,9 @@ int main() {
 
 
   Schema schema;
-  schema.AddElement("f1", p1);
-  schema.AddElement("f2", p2);
-  schema.AddElement("f3", a1);
+  //schema.AddElement("f1", new Primitive("STRING", "v1"););
+  //schema.AddElement("f2", new Primitive("STRING", "v1-1"));
+  //schema.AddElement("f3", a1);
   schema.AddElement("f4", s);
 
   Encoder e;
