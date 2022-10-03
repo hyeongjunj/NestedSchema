@@ -11,13 +11,28 @@ int main() {
   s->Add2Struct("nf1", new Primitive("STRING", "v5"));
   nested->Add2Struct("nnf1", new Map(new Primitive("STRING", "v6"), new Primitive("STRING", "v7")));
   s->Add2Struct("nf2", nested);
+  Struct* nested2 = new Struct();
+  nested2->Add2Struct("nnf1-1", new Primitive("STRING", "v8"));
+  Array* arr = new Array();
+  arr->Add2Array(new Primitive("STRING", "a1"));
+  arr->Add2Array(new Primitive("STRING", "a2"));
+  arr->Add2Array(new Primitive("STRING", "a3"));
+  nested2->Add2Struct("nnf1-2", new Map(new Primitive("STRING", "v9"), arr));
+  s->Add2Struct("nf3", nested2);
   
+  /*
+  Struct
+    nf1 string(v5)
+    nf2 Struct{nnf1 : Map(v6,v7)}
+    nf3 Struct{v8, Map(v9, arr(a1,a2,a3))}
+  */
 
 
   Schema schema;
   //schema.AddElement("f1", new Primitive("STRING", "v1"););
   //schema.AddElement("f2", new Primitive("STRING", "v1-1"));
   //schema.AddElement("f3", a1);
+  
   schema.AddElement("f4", s);
 
   Encoder e;

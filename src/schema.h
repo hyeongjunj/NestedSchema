@@ -64,13 +64,18 @@ public:
   void Add2Array(Data* data) {
     array_.push_back(data);
   }
+  int numofElements() {
+    return array_.size();
+  }
+  virtual const std::vector<Data*>& Get() override 
+  {return array_;}
 };
 
 class Struct : public Data {
 private:
   std::vector<Data*> struct_;
   std::vector<std::string> field_name_;
-  std::vector<int> offset_;
+  //std::vector<int> offset_;
 public:
   Struct() {
     SetType("STRUCT", false);
@@ -79,6 +84,9 @@ public:
     struct_.push_back(data);
     field_name_.push_back(field);
   }
+  int numofElements() {
+    return struct_.size();
+  }
   virtual const std::vector<Data*>& Get() override 
   {return struct_;}
 };
@@ -86,7 +94,7 @@ public:
 class Map : public Data {
 private:
   std::vector<Data*> map_;
-  int offset_[2];
+  //int offset_[2];
 public:
   Map(Data* key, Data* value) {
     map_.push_back(key);
@@ -106,6 +114,9 @@ private:
   MAP, STRUCT, LIST and PRIMITIVES
   */
 public:
+  ~Schema() {
+    std::cout<<"Destructor\n";
+  }
   //void GetFieldInput(std::string input);
   void AddElement(std::string field_name, Data* data) {
     SchemaElements_.insert({field_name, data});
