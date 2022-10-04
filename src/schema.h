@@ -30,6 +30,7 @@ private:
   bool isPrimitive_;
   int type_size_;
 public: 
+  ~Data(){}
   int Size() {return type_size_;}
   void SetType(std::string data_type, bool tf) {
     data_type_ = data_type;
@@ -123,7 +124,7 @@ private:
   MAP, STRUCT, LIST and PRIMITIVES
   */
 public:
-  ~Schema() {}
+  ~Schema() {std::cout<<"===\n";}
   //void GetFieldInput(std::string input);
   void AddElement(std::string field_name, Data* data) {
     SchemaElements_.insert({field_name, data});

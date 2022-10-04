@@ -47,6 +47,6 @@ int main() {
   Encoder e;
 
   e.encode(schema);
-  
+  std::cout<<"+++++++\n";
   return 0;
 }

@@ -2,8 +2,12 @@
 #include <string>
 
 // for primitive types
-void Encoder::VarientEncoding(Data* data) {
+Bytes Encoder::VarientEncoding(int64_t value) {
 	Bytes encodedBytes;
+  if(value > 127) std::cout<<"ERROR!\n";
+  std::byte b{value};
+  encodedBytes.push_back(b);
+  /*
   std::byte Header;
   int bytes = 8; // how many bytes we need at maximum
                  // TODO : it can vary with data_types.
@@ -26,8 +30,9 @@ void Encoder::VarientEncoding(Data* data) {
     //MSB <<= 8; 
     tmp <<= 8;
   }
-  encodeStream_.push_back({encodedBytes, data});
-	return;
+  */
+  //encodeStream_.push_back({encodedBytes, data});
+	return encodedBytes;
 }
 
 void Encoder::StringEncoding(Data* data) {
@@ -50,6 +55,7 @@ void Encoder::PrepareEncodingMeta() {
 
 void Encoder::EncodingMeta(Data* data, int meta_pos) {
   Bytes metadata;
+  int metadata_size = 0;
   std::string data_type = data->Type();
   int bsize = 0;
   int nestedsize = 0;
@@ -70,9 +76,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         } 
         nestedsize += bsize;
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; ///////////////
+        Bytes fieldSize = VarientEncoding(bsize);
+        metadata_size += (int)fieldSize.size();
+        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
-          meta_size_offset[meta_pos] = nestedsize;
+          meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"["<<nestedsize<<"]"<<"\n";
           break;
         }
@@ -96,9 +105,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         } 
         nestedsize += bsize;
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
+        Bytes fieldSize = VarientEncoding(bsize);
+        metadata_size += (int)fieldSize.size();
+        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
         if(DataTraverse == ValueType) {
-          meta_offset[meta_pos] = i; // endpoint of this type 
-          meta_size_offset[meta_pos] = nestedsize;
+          meta_offset[meta_pos] = i; // endpoint of this type
+          meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"MAP META       "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
@@ -123,9 +135,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         } 
         nestedsize += bsize;
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
+        Bytes fieldSize = VarientEncoding(bsize);
+        metadata_size += (int)fieldSize.size();
+        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type
-          meta_size_offset[meta_pos] = nestedsize;
+          meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
@@ -148,12 +163,12 @@ void Encoder::EncodePrimitiveType(Data* data) {
     StringEncoding(data);
   }
   else {
-    VarientEncoding(data);
+    //VarientEncoding(data);
   }
   return;
 }
 
-Bytes Encoder::encode(Schema& schema) {
+void Encoder::encode(Schema& schema) {
   // we have to traverse the schema for encoding 
   for(const auto& fields : schema.Get()) {
     // fields.first is field name,
@@ -193,8 +208,6 @@ Bytes Encoder::encode(Schema& schema) {
         }
         encodingIdx++;
       }
-      std::cout<<"-----\n";
-      
       for(int i = meta_offset.size()-1; i >= 0 ; i--) {
         std::cout<<"--------> "<<MetaStack.top().first->Type()<<"\n";
         EncodingMeta(MetaStack.top().first, MetaStack.top().second);
