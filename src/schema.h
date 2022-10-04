@@ -39,6 +39,7 @@ public:
   bool isPrimitive() {return isPrimitive_;}
   std::string Type() {return data_type_;}
   std::string Value() {return value_;}
+  virtual int numofElements() {return 0;}
   virtual const std::vector<Data*>& Get() {return {};} 
   // TODO : FIX THIS! This Get() will not be used in Primitive class
   // So we need some nicer design for this..
@@ -64,7 +65,7 @@ public:
   void Add2Array(Data* data) {
     array_.push_back(data);
   }
-  int numofElements() {
+  virtual int numofElements() override {
     return array_.size();
   }
   virtual const std::vector<Data*>& Get() override 
@@ -84,7 +85,7 @@ public:
     struct_.push_back(data);
     field_name_.push_back(field);
   }
-  int numofElements() {
+  virtual int numofElements() override {
     return struct_.size();
   }
   virtual const std::vector<Data*>& Get() override 
@@ -103,6 +104,9 @@ public:
   }
   virtual const std::vector<Data*>& Get() override 
   {return map_;}
+  virtual int numofElements() override {
+    return 2;
+  }
 };
 
 class Schema {

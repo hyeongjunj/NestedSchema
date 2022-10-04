@@ -7,22 +7,12 @@
 #include <stack>
 #include <iostream>
 #include "schema.h"
-/*
-typedef struct NestedTypePoint_ {
-  int64_t start_;
-  int64_t end_;
-  int64_t encodingIdx_;
-  Data* data_;
-  NestedTypePoint_(int encodingIdx, Data* data) :
-                  encodingIdx_(encodingIdx),
-                  data_(data) {}
-} NestedTypePoint;
-*/
-
+inline std::unordered_map<int, int> meta_offset;
 class Encoder {
 private:
   std::vector<std::pair<Bytes, Data*>> encodeStream_;
-  std::vector<std::pair<int, int>> meta_offset_;
+  //std::vector<std::pair<int, int>> meta_offset_;
+  //std::unordered_map<int, int> meta_offset_;
   // <encodingIdx, endpoint> 
 public:
   void encode(Schema& schema);
@@ -30,6 +20,6 @@ public:
   void VarientEncoding(Data* data);
   void StringEncoding(Data* data);
   void PrepareEncodingMeta();
-  void EncodingMeta(Data* data, std::pair<int,int> offset);
+  void EncodingMeta(Data* data, int meta_pos);
   void EncodePrimitiveType(Data* data);
 };
