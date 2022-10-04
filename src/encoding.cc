@@ -49,7 +49,10 @@ void Encoder::PrepareEncodingMeta() {
 }
 
 void Encoder::EncodingMeta(Data* data, int meta_pos) {
+  Bytes metadata;
   std::string data_type = data->Type();
+  int bsize = 0;
+  int nestedsize = 0;
   if(data_type.compare("ARRAY") == 0) {
     // Metadata format : [TYPE][NUMBER OF ELEMENTS][LAST LOCATION]
     //std::cout<<"ARRAY META     "<<meta_pos<<"\n";
@@ -59,11 +62,18 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
+          bsize = meta_size_offset[i];
           i = meta_offset[i];
         }
+        else {
+          bsize = encodeStream_[i].first.size();
+        } 
+        nestedsize += bsize;
+        std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; ///////////////
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
-          std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
+          meta_size_offset[meta_pos] = nestedsize;
+          std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"["<<nestedsize<<"]"<<"\n";
           break;
         }
         DataTraverse = data->Get()[++fieldIdx];
@@ -78,10 +88,17 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
+          bsize = meta_size_offset[i];
           i = meta_offset[i];
         }
+        else {
+          bsize = encodeStream_[i].first.size();
+        } 
+        nestedsize += bsize;
+        std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
         if(DataTraverse == ValueType) {
           meta_offset[meta_pos] = i; // endpoint of this type 
+          meta_size_offset[meta_pos] = nestedsize;
           std::cout<<"MAP META       "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
@@ -98,14 +115,23 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
+          bsize = meta_size_offset[i];
           i = meta_offset[i];
         }
+        else {
+          bsize = encodeStream_[i].first.size();
+        } 
+        nestedsize += bsize;
+        std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
         if(DataTraverse == data->Get()[fieldNum - 1]) {
-          meta_offset[meta_pos] = i; // endpoint of this type 
+          meta_offset[meta_pos] = i; // endpoint of this type
+          meta_size_offset[meta_pos] = nestedsize;
           std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
+        //std::cout<<"                                 FieldIdx "<<i<<"\n";
         DataTraverse = data->Get()[++fieldIdx];
+        
       }
     }
   }

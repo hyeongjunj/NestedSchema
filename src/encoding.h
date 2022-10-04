@@ -8,6 +8,9 @@
 #include <iostream>
 #include "schema.h"
 inline std::unordered_map<int, int> meta_offset;
+// <encodingIdx, endpoint>
+inline std::unordered_map<int, int> meta_size_offset;
+// <encodingIdx, size>
 class Encoder {
 private:
   std::vector<std::pair<Bytes, Data*>> encodeStream_;
