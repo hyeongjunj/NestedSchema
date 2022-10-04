@@ -52,21 +52,19 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   std::string data_type = data->Type();
   if(data_type.compare("ARRAY") == 0) {
     // Metadata format : [TYPE][NUMBER OF ELEMENTS][LAST LOCATION]
-    std::cout<<"ARRAY META     "<<meta_pos<<"\n";
+    //std::cout<<"ARRAY META     "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
+      std::cout<<"AAAAA\n";
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
           i = meta_offset[i];
-          std::cout<<"LOC "<<i<<"\n";
-        }
-        else {
-          std::cout<<"LOC "<<i<<"\n";
         }
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
+          std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
         DataTraverse = data->Get()[fieldIdx++];
@@ -75,46 +73,37 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   } 
   else if(data_type.compare("MAP") == 0) {
   // Metadata format : [TYPE][KEY LOCATION][VALUE LOCATION]
-    //std::cout<<encodeStream_.size()<<"\n";
     Data* KeyType   = data->Get()[0]; // Key
     Data* ValueType = data->Get()[1]; // Value
-    // total idx size => encodeStream.size() -1
     Data* DataTraverse = KeyType;
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
           i = meta_offset[i];
-          std::cout<<"LOC "<<i<<"\n";
-        }
-        else {
-          std::cout<<"LOC "<<i<<"\n";
         }
         if(DataTraverse == ValueType) {
           meta_offset[meta_pos] = i; // endpoint of this type 
+          std::cout<<"MAP META       "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
         DataTraverse = ValueType;
       }
     }
-
   }
   else if(data_type.compare("STRUCT") == 0) {
     // Metadata foramt : [TYPE][NUMBER OF FILEDS][LOCATION(BYTES)][LOCTION]...
-    std::cout<<"STRUCT META    "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
+    std::cout<<"fieldnum : "<<fieldNum<<"\n";
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
           i = meta_offset[i];
-          std::cout<<"LOC "<<i<<"\n";
-        }
-        else {
-          std::cout<<"LOC "<<i<<"\n";
         }
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
+          std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
         DataTraverse = data->Get()[fieldIdx++];
@@ -124,7 +113,8 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   else {
     std::cerr<<"Wrong Data Type\n";
   }
-  
+  Bytes b;
+  encodeStream_[meta_pos] = {b, data};
   return;
 }
 
@@ -167,8 +157,13 @@ void Encoder::encode(Schema& schema) {
           
           Data* popedElement = TraverseStack.top();
           TraverseStack.pop();
+          /*
           for(const auto& items : popedElement->Get()) {
             TraverseStack.push(items);
+          }
+          */
+          for(int i = popedElement->Get().size() -1; i >= 0; i--) {
+            TraverseStack.push(popedElement->Get()[i]);       
           }
         }
         encodingIdx++;

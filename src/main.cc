@@ -17,7 +17,7 @@ int main() {
   arr->Add2Array(new Primitive("STRING", "a1"));
   arr->Add2Array(new Primitive("STRING", "a2"));
   arr->Add2Array(new Primitive("STRING", "a3"));
-  nested2->Add2Struct("nnf1-2", new Map(new Primitive("STRING", "v9"), arr));
+  nested2->Add2Struct("nnf1-2", new Map(new Primitive("STRING", "v9"), new Map(new Primitive("STRING", "vv6"), new Primitive("STRING", "vv7"))));
   s->Add2Struct("nf3", nested2);
   
   /*
