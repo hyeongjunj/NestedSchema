@@ -18,7 +18,7 @@ private:
   //std::unordered_map<int, int> meta_offset_;
   // <encodingIdx, endpoint> 
 public:
-  void encode(Schema& schema);
+  Bytes encode(Schema& schema);
   //Bytes Encoding(Data* data);
   void VarientEncoding(Data* data);
   void StringEncoding(Data* data);

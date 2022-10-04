@@ -58,9 +58,14 @@ public:
 class Array : public Data {
 private:
   std::vector<Data*> array_;
+  std::string data_type_;
 public:
   Array() {
     SetType("ARRAY", false);
+  }
+  Array(Data* data) {
+    SetType("ARRAY", false);
+    data_type_.assign(data->Type(), sizeof(data->Type()));
   }
   void Add2Array(Data* data) {
     array_.push_back(data);
@@ -118,9 +123,7 @@ private:
   MAP, STRUCT, LIST and PRIMITIVES
   */
 public:
-  ~Schema() {
-    std::cout<<"Destructor\n";
-  }
+  ~Schema() {}
   //void GetFieldInput(std::string input);
   void AddElement(std::string field_name, Data* data) {
     SchemaElements_.insert({field_name, data});
@@ -128,5 +131,13 @@ public:
   const std::unordered_map<std::string, Data*>& Get() {
     return SchemaElements_;
   }
+  Data* STRING(std::string str) {
+    return new Primitive("STRING", str);
+  }
+  Data* MAP(Data* key, Data* value) {
+    return new Map(key, value);
+  }
+  Data* ARRAY(Data* data) {
+    return new Array();
+  }
 };
-

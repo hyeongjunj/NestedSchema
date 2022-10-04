@@ -153,7 +153,7 @@ void Encoder::EncodePrimitiveType(Data* data) {
   return;
 }
 
-void Encoder::encode(Schema& schema) {
+Bytes Encoder::encode(Schema& schema) {
   // we have to traverse the schema for encoding 
   for(const auto& fields : schema.Get()) {
     // fields.first is field name,

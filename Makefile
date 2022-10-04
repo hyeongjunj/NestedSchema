@@ -1,12 +1,12 @@
 CXX=g++
 CXXFLAGS=-std=c++17
-OBJS=main.o	encoding.o
+OBJS=src/main.o	src/encoding.o
 TARGET=main
 
 all: $(TARGET)
 
 clean:
-	rm -f *.o
+	rm -f src/*.o
 	rm -f $(TARGET)
 
 $(TARGET):	$(OBJS)
