@@ -57,7 +57,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
-      std::cout<<"AAAAA\n";
       if(encodeStream_[i].second->Type().compare(DataTraverse->Type()) == 0) {
         if(!DataTraverse->isPrimitive()) {
           i = meta_offset[i];
@@ -67,7 +66,7 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
           std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
-        DataTraverse = data->Get()[fieldIdx++];
+        DataTraverse = data->Get()[++fieldIdx];
       }
     }
   } 
@@ -106,7 +105,7 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
           std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
-        DataTraverse = data->Get()[fieldIdx++];
+        DataTraverse = data->Get()[++fieldIdx];
       }
     }
   }
@@ -171,10 +170,10 @@ void Encoder::encode(Schema& schema) {
       std::cout<<"-----\n";
       
       for(int i = meta_offset.size()-1; i >= 0 ; i--) {
+        std::cout<<"--------> "<<MetaStack.top().first->Type()<<"\n";
         EncodingMeta(MetaStack.top().first, MetaStack.top().second);
         MetaStack.pop();
       }
-      
     }
   }
 }
