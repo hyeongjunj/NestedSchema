@@ -212,12 +212,12 @@ void Encoder::EncodePrimitiveType(Data* data) {
     StringEncoding(data);
   }
   else {
-    //VarientEncoding(data);
+    VarientEncoding(std::stoi(data->Value()));
   }
   return;
 }
 
-void Encoder::encode(Schema& schema) {
+Bytes Encoder::encode(Schema& schema) {
   // we have to traverse the schema for encoding 
   for(const auto& fields : schema.Get()) {
     // fields.first is field name,
@@ -264,6 +264,17 @@ void Encoder::encode(Schema& schema) {
       }
     }
   }
+  Bytes bytestream;
+  for(std::pair<Bytes, Data*> bytes : encodeStream_) {
+    for(std::byte b : bytes.first) {
+      bytestream.push_back(b);
+    }
+  }
+  return bytestream;
+}
+
+Data* PartialDecode(int s, int e, Bytes &bytes) {
+  
 }
 
 Schema& Decode(Bytes &bytes) {
