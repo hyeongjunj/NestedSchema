@@ -1,5 +1,6 @@
 #include "encoding.h"
 #include <string>
+#include <cstdio>
 
 // for primitive types
 Bytes Encoder::VarientEncoding(int64_t value) {
@@ -67,16 +68,16 @@ Bytes Encoder::TypeEncoding(Data* data) {
   //Array    -> 9
   std::string type = data->Type();
   int64_t encodeType;
-  if(type.compare("I8"))          encodeType = 0;
-  else if(type.compare("I16"))    encodeType = 1;
-  else if(type.compare("I32"))    encodeType = 2;
-  else if(type.compare("I64"))    encodeType = 3;
-  else if(type.compare("F32"))    encodeType = 4;
-  else if(type.compare("F64"))    encodeType = 5;
-  else if(type.compare("STRING")) encodeType = 6;
-  else if(type.compare("STRUCT")) encodeType = 7;
-  else if(type.compare("MAP"))    encodeType = 8;
-  else if(type.compare("ARRAY"))  encodeType = 9;
+  if(type.compare("I8") == 0)          encodeType = 0;
+  else if(type.compare("I16") == 0)    encodeType = 1;
+  else if(type.compare("I32") == 0)    encodeType = 2;
+  else if(type.compare("I64") == 0)    encodeType = 3;
+  else if(type.compare("F32") == 0)    encodeType = 4;
+  else if(type.compare("F64") == 0)    encodeType = 5;
+  else if(type.compare("STRING") == 0) encodeType = 6;
+  else if(type.compare("STRUCT") == 0) encodeType = 7;
+  else if(type.compare("MAP") == 0)    encodeType = 8;
+  else if(type.compare("ARRAY") == 0)  encodeType = 9;
   return VarientEncoding(encodeType);
 }
 
@@ -297,42 +298,65 @@ Bytes Encoder::encode(Schema& schema) {
 
 Schema& Decoder::decode(Bytes &bytes) {
   char* charBytes = reinterpret_cast<char*>(bytes.data());
-  Data* data = PartialDecode(0, bytes.size() -1, charBytes);
+  int i = 0;
+  Data* data = PartialDecode(0, charBytes);
 }
 
 //return number
-int Decoder::VariantDecoder(char* start_point, int offset) {
-  return (int)start_point[0];
-}
-
-Data* Decoder::PartialDecode(int s, int e, char* charBytes) {
-  Data* data;
-  char type = charBytes[s];
-  int variantLength = 1;
-  for(int i = s+TYPEMETA; ; i++) {
-    if(charBytes[i] & 128 == 128) variantLength++;
+int Decoder::VariantDecoder(char* start_point, int& offset) {
+  offset++;
+  for(int i = 0; ; i++) {
+    if(start_point[i] & 128 == 128) offset++;
     else break;
   }
-  char length = charBytes[s+TYPEMETA];
-  int offset = TYPEMETA + variantLength;
+  return (int)start_point[0]; // TODO : have to be changed
+}
+
+Data* Decoder::PartialDecode(int s, char* charBytes) {
+  std::cout<<"PartialDecode "<<charBytes[0]<<"\n";
+  Data* data;
+  int decodingIdx = s;
+  char type = charBytes[s];  // 1 byte for TYPE decoding
+  std::cout<<"type "<<type<<"\n";
+  decodingIdx += TYPEMETA;
+  int variantLength = 1;
+  int numofFields;
   if(type == 7) { // struct
-    PartialDecode(s+TYPEMETA, s+offset, charBytes);
+    Struct* str = new Struct();
+    numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    std::cout<<"numofFields : "<<numofFields<<"\n";
+    for(int i = 0; i < numofFields; i++) {
+      int s_ = decodingIdx;
+      VariantDecoder(charBytes + decodingIdx, decodingIdx);
+      std::cout<<"starting point : "<<s_<<"\n";
+      str->Add2Struct("field", PartialDecode(s_, charBytes + s_));
+      decodingIdx++;
+    }
   }
   else if(type == 8) { // map
-    data = new Map(PartialDecode(s+TYPEMETA, s+offset, charBytes),
-        PartialDecode(s+TYPEMETA, s+offset, charBytes));
+    //data = new Map(PartialDecode(s+TYPEMETA, s+offset, charBytes),
+    //PartialDecode(s+TYPEMETA, s+offset, charBytes));
   }
   else if(type == 9) { // array
+    Array* arr = new Array();
+    numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    for(int i = 0; i < numofFields; i++) {
+      int s_ = decodingIdx;
+      VariantDecoder(charBytes + decodingIdx, decodingIdx);
+      arr->Add2Array(PartialDecode(s_, charBytes + s_));
+      decodingIdx++;
+    }
   }
   else {
-    data = PrimitiveTypeDecode(s+TYPEMETA, s+TYPEMETA+length, charBytes);
+    //data = PrimitiveTypeDecode(decodingIdx, s+TYPEMETA+length, charBytes);
+    printf("...........\n");
   }
   return data;
 }
 
 Data* Decoder::PrimitiveTypeDecode(int s, int e, char* charBytes) {
   Data* data;
-  char type = charBytes[s];
+  char type = (char)charBytes[s];
   int variantLength = 1;
   for(int i = s+TYPEMETA; ; i++) {
     if(charBytes[i] & 128 == 128) variantLength++;

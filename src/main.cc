@@ -1,5 +1,7 @@
 #include "encoding.h"
-
+  std::ostream& operator<< (std::ostream& os, std::byte b) {
+    return os << std::bitset<8>(std::to_integer<int>(b));
+  }
 int main() {
   Struct* a1 = new Struct();
   a1->Add2Struct("street", new Primitive("STRING", "1234"));
@@ -48,8 +50,10 @@ int main() {
   Encoder e;
   Decoder d;
   Bytes bytes = e.encode(schema);
-  std::cout<<bytes.size()<<"\n";
-  //d.decode(bytes);
+
+  std::cout<<"bytes[0] "<<bytes[1]<<"\n";
+  //std::cout<<bytes.size()<<"\n";
+  d.decode(bytes);
   
   return 0;
 }
