@@ -179,7 +179,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   }
   else if(data_type.compare("STRUCT") == 0) {
     // Metadata foramt : [TYPE][NUMBER OF FILEDS][LOCATION(BYTES)][LOCTION]...
-    std::cout<<"############ "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
     Bytes fieldNumMeta = VarientEncoding(fieldNum);
     for(std::byte b : fieldNumMeta) metadata.push_back(b);
@@ -213,7 +212,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
           //encodeStream_.insert(encodeStream_.begin() + meta_pos, {metadata, data});
           encodeStream_[meta_pos].first = metadata;
           encodeStream_[meta_pos].second = data;
-          std::cout<<"!!!!!! "<<encodeStream_[meta_pos].first.size()<<"\n";
           break;
         }
         DataTraverse = data->Get()[++fieldIdx];
@@ -221,7 +219,7 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     }
   }
   else {
-    std::cerr<<"Wrong Data Type\n";
+    std::cerr<<"[FATAL ERROR] Wrong Data Type\n";
   }
   Bytes b;
   //encodeStream_[meta_pos] = {b, data};
@@ -298,15 +296,16 @@ Bytes Encoder::encode(Schema& schema) {
 Schema& Decoder::decode(Bytes &bytes) {
   char* charBytes = reinterpret_cast<char*>(bytes.data());
   int i = 0;
-  Data* data = PartialDecode(charBytes, bytes.size() - 1);
+  Struct* data = (Struct*)PartialDecode(charBytes, bytes.size() - 1);
   schema.AddElement("schema", data);
+  return schema;
 }
 
 //return number
 int Decoder::VariantDecoder(char* start_point, int& offset) {
   offset++;
   for(int i = 0; ; i++) {
-    if(start_point[i] & 128 == 128) { // TODO : CHange this. This logic is not working
+    if(start_point[i] & 128 == 128) { // TODO : Change this. This logic is not working
       //std::cout<<"Variant Increase\n";
       //offset++;
     }
