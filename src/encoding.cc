@@ -87,6 +87,7 @@ void Encoder::PrepareEncodingMeta() {
 }
 
 void Encoder::EncodingMeta(Data* data, int meta_pos) {
+  std::cout<<"Encoding Meta\n";
   Bytes metadata;
   int metadata_size = 1;
   std::string data_type = data->Type();
@@ -231,6 +232,7 @@ void Encoder::EncodePrimitiveType(Data* data) {
     StringEncoding(data);
   }
   else {
+    std::cout<<data->Value()<<"\n";
     VarientEncoding(std::stoi(data->Value()));
   }
   return;
@@ -265,11 +267,7 @@ Bytes Encoder::encode(Schema& schema) {
           
           Data* popedElement = TraverseStack.top();
           TraverseStack.pop();
-          /*
-          for(const auto& items : popedElement->Get()) {
-            TraverseStack.push(items);
-          }
-          */
+          
           for(int i = popedElement->Get().size() -1; i >= 0; i--) {
             TraverseStack.push(popedElement->Get()[i]);       
           }
