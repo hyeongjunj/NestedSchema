@@ -292,97 +292,116 @@ Bytes Encoder::encode(Schema& schema) {
       bytestream.push_back(b);
     }
   }
-  
   return bytestream;
 }
 
 Schema& Decoder::decode(Bytes &bytes) {
   char* charBytes = reinterpret_cast<char*>(bytes.data());
   int i = 0;
-  Data* data = PartialDecode(0, charBytes);
+  Data* data = PartialDecode(charBytes, bytes.size() - 1);
+  schema.AddElement("schema", data);
 }
 
 //return number
 int Decoder::VariantDecoder(char* start_point, int& offset) {
   offset++;
   for(int i = 0; ; i++) {
-    if(start_point[i] & 128 == 128) offset++;
+    if(start_point[i] & 128 == 128) { // TODO : CHange this. This logic is not working
+      //std::cout<<"Variant Increase\n";
+      //offset++;
+    }
     else break;
   }
   return (int)start_point[0]; // TODO : have to be changed
 }
 
-Data* Decoder::PartialDecode(int s, char* charBytes) {
-  std::cout<<"PartialDecode "<<charBytes[0]<<"\n";
+Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
   Data* data;
-  int decodingIdx = s;
-  char type = charBytes[s];  // 1 byte for TYPE decoding
-  std::cout<<"type "<<type<<"\n";
+  int decodingIdx = 0;
+  char type = charBytes[decodingIdx];  // 1 byte for TYPE decoding
   decodingIdx += TYPEMETA;
   int variantLength = 1;
   int numofFields;
   if(type == 7) { // struct
+    std::cout<<" ******* Struct Decoding *******\n";
     Struct* str = new Struct();
     numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
-    std::cout<<"numofFields : "<<numofFields<<"\n";
+    std::vector<int64_t> fieldSize(numofFields);
     for(int i = 0; i < numofFields; i++) {
-      int s_ = decodingIdx;
-      VariantDecoder(charBytes + decodingIdx, decodingIdx);
-      std::cout<<"starting point : "<<s_<<"\n";
-      str->Add2Struct("field", PartialDecode(s_, charBytes + s_));
-      decodingIdx++;
+      fieldSize[i] = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+      std::cout<<fieldSize[i]<<"\n";
     }
+    // up to this point was metadata decoding
+    for(int i = 0; i < numofFields; i++) {
+      // decodingIdx is the staring bytes.
+      // We have to recursively decode 
+      // from [decodingIdx] to [decodingIdx + fieldSize - 1]
+      str->Add2Struct("field", PartialDecode(charBytes + decodingIdx, 
+                               decodingIdx + fieldSize[i] -1));
+      decodingIdx += fieldSize[i];
+    }
+    data = str;
   }
   else if(type == 8) { // map
-    //data = new Map(PartialDecode(s+TYPEMETA, s+offset, charBytes),
-    //PartialDecode(s+TYPEMETA, s+offset, charBytes));
+    std::cout<<" ******* Map Decoding *******\n";
+    int64_t keyLength   = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    int64_t valueLength = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    Data* Key   = PartialDecode(charBytes + decodingIdx, decodingIdx + keyLength   -1);
+    std::cout<<"K "<<decodingIdx<<" V "<<decodingIdx + keyLength   -1<<"\n";
+    decodingIdx += keyLength;
+    Data* Value = PartialDecode(charBytes + decodingIdx, decodingIdx + valueLength -1);
+    std::cout<<"K "<<decodingIdx<<" V "<<decodingIdx + keyLength   -1<<"\n";
+    data = new Map(Key, Value);
   }
   else if(type == 9) { // array
     Array* arr = new Array();
+    std::cout<<" ******* Array Decoding *******\n";
     numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    std::vector<int64_t> fieldSize(numofFields);
     for(int i = 0; i < numofFields; i++) {
-      int s_ = decodingIdx;
-      VariantDecoder(charBytes + decodingIdx, decodingIdx);
-      arr->Add2Array(PartialDecode(s_, charBytes + s_));
-      decodingIdx++;
+      fieldSize[i] = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+      std::cout<<fieldSize[i]<<"\n";
     }
+    // up to this point was metadata decoding
+    for(int i = 0; i < numofFields; i++) {
+      // decodingIdx is the staring bytes.
+      // We have to recursively decode 
+      // from [decodingIdx] to [decodingIdx + fieldSize - 1]
+      arr->Add2Array(PartialDecode(charBytes + decodingIdx, decodingIdx + fieldSize[i] -1));
+      decodingIdx += fieldSize[i];
+    }
+    data = arr;
   }
   else {
-    //data = PrimitiveTypeDecode(decodingIdx, s+TYPEMETA+length, charBytes);
-    printf("...........\n");
+    data = PrimitiveTypeDecode(charBytes);
   }
   return data;
 }
 
-Data* Decoder::PrimitiveTypeDecode(int s, int e, char* charBytes) {
+Data* Decoder::PrimitiveTypeDecode(char* charBytes) {
   Data* data;
-  char type = (char)charBytes[s];
-  int variantLength = 1;
-  for(int i = s+TYPEMETA; ; i++) {
-    if(charBytes[i] & 128 == 128) variantLength++;
-    else break;
+  int decodingIdx = 0;
+  char type = (char)charBytes[decodingIdx];
+  decodingIdx++;
+  int64_t length = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+  if(type == 0) 
+    data = new Primitive("I8",     std::string(charBytes + decodingIdx, length));
+  else if(type == 1)
+    data = new Primitive("I16",    std::string(charBytes + decodingIdx, length));
+  else if(type == 2) 
+    data = new Primitive("I32",    std::string(charBytes + decodingIdx, length));
+  else if(type == 3)  
+    data = new Primitive("I64",    std::string(charBytes + decodingIdx, length));
+  else if(type == 4) 
+    data = new Primitive("F32",    std::string(charBytes + decodingIdx, length));
+  else if(type == 5) 
+    data = new Primitive("F64",    std::string(charBytes + decodingIdx, length));
+  else if(type == 6) {
+    data = new Primitive("STRING", std::string(charBytes + decodingIdx, length));
+    std::cout<<"                                                        "<<data->Value()<<"\n";
   }
-  char length = charBytes[s+1];
-  int offset = s + type + variantLength;
-  if(charBytes[s] == 0) 
-    data = new Primitive("I8",     std::string(charBytes + offset, length));
-  else if(charBytes[s] == 1)
-    data = new Primitive("I16",    std::string(charBytes + offset, length));
-  else if(charBytes[s] == 2) 
-    data = new Primitive("I32",    std::string(charBytes + offset, length));
-  else if(charBytes[s] == 3)  
-    data = new Primitive("I64",    std::string(charBytes + offset, length));
-  else if(charBytes[s] == 4) 
-    data = new Primitive("F32",    std::string(charBytes + offset, length));
-  else if(charBytes[s] == 5) 
-    data = new Primitive("F64",    std::string(charBytes + offset, length));
-  else if(charBytes[s] == 6) 
-    data = new Primitive("STRING", std::string(charBytes + offset, length));
-  std::cout<<data->Value()<<"\n";
+  else {
+    std::cerr<<"FATAL ERROR : Failed to Decode\n";
+  }
   return data;
 }
-Data* StructTypeDecode(int s, int e, char* charBytes) {
-
-}
-Data* MapTypeDecode(int s, int e, char* charBytes);
-Data* ArrayTypeDecode(int s, int e, char* charBytes);

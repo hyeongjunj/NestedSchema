@@ -41,7 +41,9 @@ public:
   std::string Type() {return data_type_;}
   std::string Value() {return value_;}
   virtual int numofElements() {return 0;}
-  virtual const std::vector<Data*>& Get() {return {};} 
+  virtual const std::vector<Data*>& Get() {
+    std::cout<<"[FATAL ERROR] : Invalid Access!\n"; 
+    return {};} 
   // TODO : FIX THIS! This Get() will not be used in Primitive class
   // So we need some nicer design for this..
 };

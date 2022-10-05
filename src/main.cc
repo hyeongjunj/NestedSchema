@@ -51,9 +51,9 @@ int main() {
   Decoder d;
   Bytes bytes = e.encode(schema);
 
-  std::cout<<"bytes[0] "<<bytes[1]<<"\n";
+  std::cout<<"bytes[0] "<<bytes[0]<<"\n";
   //std::cout<<bytes.size()<<"\n";
-  d.decode(bytes);
-  
+  Encoder E;
+  E.encode(d.decode(bytes));
   return 0;
 }

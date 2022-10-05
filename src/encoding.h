@@ -30,12 +30,11 @@ public:
 };
 
 class Decoder {
+private:
+  Schema schema;
 public:
-  Data* PartialDecode(int s, char* charBytes);
-  Data* PrimitiveTypeDecode(int s, int e, char* charBytes);
-  Data* StructTypeDecode(int s, int e, char* charBytes);
-  Data* MapTypeDecode(int s, int e, char* charBytes);
-  Data* ArrayTypeDecode(int s, int e, char* charBytes);
+  Data* PartialDecode(char* charBytes, int endIdx);
+  Data* PrimitiveTypeDecode(char* charBytes);
   int VariantDecoder(char* start_point, int& offset); 
   Schema& decode(Bytes &bytes);
 };
