@@ -41,12 +41,15 @@ int main() {
   //schema.AddElement("f1", new Primitive("STRING", "v1"););
   //schema.AddElement("f2", new Primitive("STRING", "v1-1"));
   //schema.AddElement("f3", a1);
-  
+  Struct* decodeTest = new Struct();
+  decodeTest->Add2Struct("f1", new Primitive("STRING", "1234567"));
   schema.AddElement("f4", s);
-
+  //schema.AddElement("f1", decodeTest);
   Encoder e;
-
-  e.encode(schema);
-  std::cout<<"+++++++\n";
+  Decoder d;
+  Bytes bytes = e.encode(schema);
+  std::cout<<bytes.size()<<"\n";
+  //d.decode(bytes);
+  
   return 0;
 }

@@ -7,6 +7,7 @@
 #include <stack>
 #include <iostream>
 #include "schema.h"
+#define    TYPEMETA    1
 inline std::unordered_map<int, int> meta_offset;
 // <encodingIdx, endpoint>
 inline std::unordered_map<int, int> meta_size_offset;
@@ -26,4 +27,15 @@ public:
   void PrepareEncodingMeta();
   void EncodingMeta(Data* data, int meta_pos);
   void EncodePrimitiveType(Data* data);
+};
+
+class Decoder {
+public:
+  Data* PartialDecode(int s, int e, char* charBytes);
+  Data* PrimitiveTypeDecode(int s, int e, char* charBytes);
+  Data* StructTypeDecode(int s, int e, char* charBytes);
+  Data* MapTypeDecode(int s, int e, char* charBytes);
+  Data* ArrayTypeDecode(int s, int e, char* charBytes);
+  int VariantDecoder(char* start_point, int offset); 
+  Schema& decode(Bytes &bytes);
 };

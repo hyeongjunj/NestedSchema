@@ -49,6 +49,7 @@ void Encoder::StringEncoding(Data* data) {
   for(int i = 0; i < data->Value().size(); i++) {
     bstream.push_back(std::byte(str[i]));
   }
+  std::cout<<"       --> "<<bstream.size()<<"\n";
   encodeStream_.push_back({bstream, data});
   return;
 }
@@ -86,7 +87,7 @@ void Encoder::PrepareEncodingMeta() {
 
 void Encoder::EncodingMeta(Data* data, int meta_pos) {
   Bytes metadata;
-  int metadata_size = 0;
+  int metadata_size = 1;
   std::string data_type = data->Type();
   int bsize = 0;
   int nestedsize = 0;
@@ -98,6 +99,10 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     // Metadata format : [TYPE][NUMBER OF ELEMENTS][LAST LOCATION]
     //std::cout<<"ARRAY META     "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
+    Bytes fieldNumMeta = VarientEncoding(fieldNum);
+    for(std::byte b : fieldNumMeta) metadata.push_back(b);
+    //encodeStream_.push_back({fieldNumMeta, data});
+    metadata_size += fieldNumMeta.size();
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     for(int i = meta_pos + 1; i < encodeStream_.size(); i++) {
@@ -116,13 +121,18 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
-        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
-        encodeStream_.push_back({metadata, data});
-
+        //encodeStream_.insert(encodeStream_.begin() + meta_pos, 
+        //                    std::make_pair(metadata, data));
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"ARRAY META     "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"["<<nestedsize<<"]"<<"\n";
+          std::cout<<"metadata size : "<<meta_size_offset[meta_pos]<<" bytes\n";
+          std::cout<<"metadata size : "<<metadata_size<<" bytes\n";
+          std::cout<<"metadata size : "<<nestedsize<<" bytes\n";
+          //encodeStream_.insert(encodeStream_.begin() + meta_pos, {metadata, data});
+          encodeStream_[meta_pos].first = metadata;
+          encodeStream_[meta_pos].second = data;
           break;
         }
         DataTraverse = data->Get()[++fieldIdx];
@@ -150,13 +160,16 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
-        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
-        encodeStream_.push_back({metadata, data});
-  
+        //encodeStream_.insert(encodeStream_.begin() + meta_pos, 
+        //                     std::make_pair(metadata, data));
         if(DataTraverse == ValueType) {
           meta_offset[meta_pos] = i; // endpoint of this type
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"MAP META       "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
+          std::cout<<"metadata size : "<<metadata.size()<<" bytes\n";
+          //encodeStream_.insert(encodeStream_.begin() + meta_pos, {metadata, data});
+          encodeStream_[meta_pos].first = metadata;
+          encodeStream_[meta_pos].second = data;
           break;
         }
         DataTraverse = ValueType;
@@ -165,7 +178,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   }
   else if(data_type.compare("STRUCT") == 0) {
     // Metadata foramt : [TYPE][NUMBER OF FILEDS][LOCATION(BYTES)][LOCTION]...
+    std::cout<<"############ "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
+    Bytes fieldNumMeta = VarientEncoding(fieldNum);
+    for(std::byte b : fieldNumMeta) metadata.push_back(b);
+    //encodeStream_.push_back({fieldNumMeta, data});
+    metadata_size += fieldNumMeta.size();
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     std::cout<<"fieldnum : "<<fieldNum<<"\n";
@@ -185,17 +203,19 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
-        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
-        encodeStream_.push_back({metadata, data});
-
+        
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
+          std::cout<<"metadata size : "<<metadata.size()<<" bytes\n";   
+          //encodeStream_.insert(encodeStream_.begin() + meta_pos, {metadata, data});
+          encodeStream_[meta_pos].first = metadata;
+          encodeStream_[meta_pos].second = data;
+          std::cout<<"!!!!!! "<<encodeStream_[meta_pos].first.size()<<"\n";
           break;
         }
         DataTraverse = data->Get()[++fieldIdx];
-        
       }
     }
   }
@@ -203,7 +223,7 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     std::cerr<<"Wrong Data Type\n";
   }
   Bytes b;
-  encodeStream_[meta_pos] = {b, data};
+  //encodeStream_[meta_pos] = {b, data};
   return;
 }
 
@@ -258,7 +278,7 @@ Bytes Encoder::encode(Schema& schema) {
         encodingIdx++;
       }
       for(int i = meta_offset.size()-1; i >= 0 ; i--) {
-        std::cout<<"--------> "<<MetaStack.top().first->Type()<<"\n";
+        //std::cout<<"--------> "<<MetaStack.top().first->Type()<<"\n";
         EncodingMeta(MetaStack.top().first, MetaStack.top().second);
         MetaStack.pop();
       }
@@ -266,17 +286,79 @@ Bytes Encoder::encode(Schema& schema) {
   }
   Bytes bytestream;
   for(std::pair<Bytes, Data*> bytes : encodeStream_) {
+    std::cout<<bytes.first.size()<<" bytes..\n";
     for(std::byte b : bytes.first) {
       bytestream.push_back(b);
     }
   }
+  
   return bytestream;
 }
 
-Data* PartialDecode(int s, int e, Bytes &bytes) {
-  
+Schema& Decoder::decode(Bytes &bytes) {
+  char* charBytes = reinterpret_cast<char*>(bytes.data());
+  Data* data = PartialDecode(0, bytes.size() -1, charBytes);
 }
 
-Schema& Decode(Bytes &bytes) {
-  
+//return number
+int Decoder::VariantDecoder(char* start_point, int offset) {
+  return (int)start_point[0];
 }
+
+Data* Decoder::PartialDecode(int s, int e, char* charBytes) {
+  Data* data;
+  char type = charBytes[s];
+  int variantLength = 1;
+  for(int i = s+TYPEMETA; ; i++) {
+    if(charBytes[i] & 128 == 128) variantLength++;
+    else break;
+  }
+  char length = charBytes[s+TYPEMETA];
+  int offset = TYPEMETA + variantLength;
+  if(type == 7) { // struct
+    PartialDecode(s+TYPEMETA, s+offset, charBytes);
+  }
+  else if(type == 8) { // map
+    data = new Map(PartialDecode(s+TYPEMETA, s+offset, charBytes),
+        PartialDecode(s+TYPEMETA, s+offset, charBytes));
+  }
+  else if(type == 9) { // array
+  }
+  else {
+    data = PrimitiveTypeDecode(s+TYPEMETA, s+TYPEMETA+length, charBytes);
+  }
+  return data;
+}
+
+Data* Decoder::PrimitiveTypeDecode(int s, int e, char* charBytes) {
+  Data* data;
+  char type = charBytes[s];
+  int variantLength = 1;
+  for(int i = s+TYPEMETA; ; i++) {
+    if(charBytes[i] & 128 == 128) variantLength++;
+    else break;
+  }
+  char length = charBytes[s+1];
+  int offset = s + type + variantLength;
+  if(charBytes[s] == 0) 
+    data = new Primitive("I8",     std::string(charBytes + offset, length));
+  else if(charBytes[s] == 1)
+    data = new Primitive("I16",    std::string(charBytes + offset, length));
+  else if(charBytes[s] == 2) 
+    data = new Primitive("I32",    std::string(charBytes + offset, length));
+  else if(charBytes[s] == 3)  
+    data = new Primitive("I64",    std::string(charBytes + offset, length));
+  else if(charBytes[s] == 4) 
+    data = new Primitive("F32",    std::string(charBytes + offset, length));
+  else if(charBytes[s] == 5) 
+    data = new Primitive("F64",    std::string(charBytes + offset, length));
+  else if(charBytes[s] == 6) 
+    data = new Primitive("STRING", std::string(charBytes + offset, length));
+  std::cout<<data->Value()<<"\n";
+  return data;
+}
+Data* StructTypeDecode(int s, int e, char* charBytes) {
+
+}
+Data* MapTypeDecode(int s, int e, char* charBytes);
+Data* ArrayTypeDecode(int s, int e, char* charBytes);
