@@ -21,6 +21,7 @@ public:
   void encode(Schema& schema);
   //Bytes Encoding(Data* data);
   Bytes VarientEncoding(int64_t value);
+  Bytes TypeEncoding(Data* data);
   void StringEncoding(Data* data);
   void PrepareEncodingMeta();
   void EncodingMeta(Data* data, int meta_pos);

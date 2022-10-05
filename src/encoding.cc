@@ -36,16 +36,47 @@ Bytes Encoder::VarientEncoding(int64_t value) {
 }
 
 void Encoder::StringEncoding(Data* data) {
-  // for string type, length + string bytecode
+  // for string type, type + length + string bytecode
   // length should be encodeded with VarientEncoding
   Bytes bstream;
-  bstream.push_back(std::byte{67}); // TODO: Change. Temporal usage..
+  
+  Bytes type = TypeEncoding(data);
+  Bytes length = VarientEncoding(data->Value().size());
+  for(std::byte b : type) bstream.push_back(b);
+  for(std::byte b : length) bstream.push_back(b);
+
   const char* str = data->Value().c_str();
   for(int i = 0; i < data->Value().size(); i++) {
     bstream.push_back(std::byte(str[i]));
   }
   encodeStream_.push_back({bstream, data});
   return;
+}
+
+Bytes Encoder::TypeEncoding(Data* data) {
+  // i8      -> 0, 
+  //i16      -> 1
+  //i32      -> 2
+  //i64      -> 3
+  //f32      -> 4
+  //f64      -> 5
+  //String   -> 6
+  //Struct   -> 7
+  //Map      -> 8
+  //Array    -> 9
+  std::string type = data->Type();
+  int64_t encodeType;
+  if(type.compare("I8"))          encodeType = 0;
+  else if(type.compare("I16"))    encodeType = 1;
+  else if(type.compare("I32"))    encodeType = 2;
+  else if(type.compare("I64"))    encodeType = 3;
+  else if(type.compare("F32"))    encodeType = 4;
+  else if(type.compare("F64"))    encodeType = 5;
+  else if(type.compare("STRING")) encodeType = 6;
+  else if(type.compare("STRUCT")) encodeType = 7;
+  else if(type.compare("MAP"))    encodeType = 8;
+  else if(type.compare("ARRAY"))  encodeType = 9;
+  return VarientEncoding(encodeType);
 }
 
 void Encoder::PrepareEncodingMeta() {
@@ -59,6 +90,10 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
   std::string data_type = data->Type();
   int bsize = 0;
   int nestedsize = 0;
+
+  Bytes type = TypeEncoding(data);
+  for(std::byte b : type) metadata.push_back(b);
+
   if(data_type.compare("ARRAY") == 0) {
     // Metadata format : [TYPE][NUMBER OF ELEMENTS][LAST LOCATION]
     //std::cout<<"ARRAY META     "<<meta_pos<<"\n";
@@ -78,7 +113,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; ///////////////
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+
+        Bytes length = VarientEncoding(bsize);
+        for(std::byte b : length) metadata.push_back(b);
+        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+        encodeStream_.push_back({metadata, data});
+
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
@@ -107,7 +147,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+
+        Bytes length = VarientEncoding(bsize);
+        for(std::byte b : length) metadata.push_back(b);
+        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+        encodeStream_.push_back({metadata, data});
+  
         if(DataTraverse == ValueType) {
           meta_offset[meta_pos] = i; // endpoint of this type
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
@@ -137,14 +182,18 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         std::cout<<"                                 FieldIdx "<<i<<" "<<bsize<<"\n"; //////////////
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-        encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+
+        Bytes length = VarientEncoding(bsize);
+        for(std::byte b : length) metadata.push_back(b);
+        //encodeStream_.push_back({VarientEncoding(fieldSize.size()), data});
+        encodeStream_.push_back({metadata, data});
+
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"STRUCT META    "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           break;
         }
-        //std::cout<<"                                 FieldIdx "<<i<<"\n";
         DataTraverse = data->Get()[++fieldIdx];
         
       }
@@ -217,3 +266,6 @@ void Encoder::encode(Schema& schema) {
   }
 }
 
+Schema& Decode(Bytes &bytes) {
+  
+}
