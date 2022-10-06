@@ -99,7 +99,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
   if(data_type.compare("ARRAY") == 0) {
     // Metadata format : [TYPE][NUMBER OF ELEMENTS][LAST LOCATION]
-    //std::cout<<"ARRAY META     "<<meta_pos<<"\n";
     int fieldNum = data->numofElements();
     Bytes fieldNumMeta = VarientEncoding(fieldNum);
     for(std::byte b : fieldNumMeta) metadata.push_back(b);
@@ -123,8 +122,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
-        //encodeStream_.insert(encodeStream_.begin() + meta_pos, 
-        //                    std::make_pair(metadata, data));
         if(DataTraverse == data->Get()[fieldNum - 1]) {
           meta_offset[meta_pos] = i; // endpoint of this type 
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
@@ -162,14 +159,11 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
 
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
-        //encodeStream_.insert(encodeStream_.begin() + meta_pos, 
-        //                     std::make_pair(metadata, data));
         if(DataTraverse == ValueType) {
           meta_offset[meta_pos] = i; // endpoint of this type
           meta_size_offset[meta_pos] = nestedsize + metadata_size;
           std::cout<<"MAP META       "<<"["<<meta_pos<<"]"<<"["<<i<<"]"<<"\n";
           std::cout<<"metadata size : "<<metadata.size()<<" bytes\n";
-          //encodeStream_.insert(encodeStream_.begin() + meta_pos, {metadata, data});
           encodeStream_[meta_pos].first = metadata;
           encodeStream_[meta_pos].second = data;
           break;
@@ -183,8 +177,22 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     int fieldNum = data->numofElements();
     Bytes fieldNumMeta = VarientEncoding(fieldNum);
     for(std::byte b : fieldNumMeta) metadata.push_back(b);
-    //encodeStream_.push_back({fieldNumMeta, data});
     metadata_size += fieldNumMeta.size();
+    // encode field names
+    for(int i = 0; i < data->numofElements(); i++) {
+      Bytes bstream;
+      //Bytes length = VarientEncoding(.size());
+      //for(std::byte b : length) bstream.push_back(b);
+      std::string fieldName = ((Struct*)data)->fieldName(i);
+      const char* str = fieldName.c_str();
+      Bytes length = VarientEncoding(fieldName.size());
+      for(std::byte b : length) metadata.push_back(b);
+      for(int i = 0; i < fieldName.size(); i++) {
+        metadata.push_back(std::byte(str[i]));
+      }
+      metadata_size += length.size() + fieldName.size();
+      std::cout<<"               "<<length.size()<<"                   "<<fieldName<<"\n";
+    }
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     std::cout<<"fieldnum : "<<fieldNum<<"\n";
@@ -314,6 +322,12 @@ Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
     std::cout<<" ******* Struct Decoding *******\n";
     Struct* str = new Struct();
     numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+    std::vector<std::string> fieldName(numofFields);
+    for(int i = 0; i < numofFields; i++) {
+      int length = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+      fieldName[i] = std::string(charBytes + decodingIdx, length);
+      decodingIdx += length;
+    }
     std::vector<int64_t> fieldSize(numofFields);
     for(int i = 0; i < numofFields; i++) {
       fieldSize[i] = VariantDecoder(charBytes + decodingIdx, decodingIdx);
@@ -324,7 +338,7 @@ Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
       // decodingIdx is the staring bytes.
       // We have to recursively decode 
       // from [decodingIdx] to [decodingIdx + fieldSize - 1]
-      str->Add2Struct("field", PartialDecode(charBytes + decodingIdx, 
+      str->Add2Struct(fieldName[i], PartialDecode(charBytes + decodingIdx, 
                                decodingIdx + fieldSize[i] -1));
       decodingIdx += fieldSize[i];
     }

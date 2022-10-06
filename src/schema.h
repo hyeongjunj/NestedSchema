@@ -108,7 +108,6 @@ class Struct : public Data {
 private:
   std::vector<Data*> struct_;
   std::vector<std::string> field_name_;
-  //std::vector<int> offset_;
 public:
   Struct() {
     SetType("STRUCT", false);
@@ -121,6 +120,14 @@ public:
     struct_.push_back(data);
     field_name_.push_back(field);
     return this;
+  }
+  std::string fieldName(int idx) {
+    if(idx < field_name_.size())
+      return field_name_[idx];
+    else {
+      std::cerr<<"[ERROR] Wrong access\n";
+      return "";
+    }
   }
   virtual int numofElements() override {
     return struct_.size();
