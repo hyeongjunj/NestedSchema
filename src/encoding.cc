@@ -50,7 +50,9 @@ void Encoder::StringEncoding(Data* data) {
   for(int i = 0; i < data->Value().size(); i++) {
     bstream.push_back(std::byte(str[i]));
   }
-  std::cout<<"       --> "<<bstream.size()<<"\n";
+  std::cout<<"       --> "<<type.size()<<"\n";
+  std::cout<<"       --> "<<length.size()<<"\n";
+  std::cout<<"       --> "<<data->Value().size()<<"\n";
   encodeStream_.push_back({bstream, data});
   return;
 }
@@ -178,7 +180,12 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
     Bytes fieldNumMeta = VarientEncoding(fieldNum);
     for(std::byte b : fieldNumMeta) metadata.push_back(b);
     metadata_size += fieldNumMeta.size();
+    std::cout<<"==============> "<<fieldNumMeta.size()<<"\n";
+    std::cout<<"==============> "<<metadata_size<<"\n";
     // encode field names
+   
+
+
     for(int i = 0; i < data->numofElements(); i++) {
       Bytes bstream;
       //Bytes length = VarientEncoding(.size());
@@ -193,6 +200,10 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
       metadata_size += length.size() + fieldName.size();
       std::cout<<"               "<<length.size()<<"                   "<<fieldName<<"\n";
     }
+    
+
+
+
     Data* DataTraverse = data->Get()[0];
     int fieldIdx = 0;
     std::cout<<"fieldnum : "<<fieldNum<<"\n";
@@ -321,17 +332,24 @@ Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
     std::cout<<" ******* Struct Decoding *******\n";
     Struct* str = new Struct();
     numofFields = VariantDecoder(charBytes + decodingIdx, decodingIdx);
+
+    
+
     std::vector<std::string> fieldName(numofFields);
     for(int i = 0; i < numofFields; i++) {
       int length = VariantDecoder(charBytes + decodingIdx, decodingIdx);
       fieldName[i] = std::string(charBytes + decodingIdx, length);
       decodingIdx += length;
     }
+    
+
+
     std::vector<int64_t> fieldSize(numofFields);
     for(int i = 0; i < numofFields; i++) {
       fieldSize[i] = VariantDecoder(charBytes + decodingIdx, decodingIdx);
       std::cout<<fieldSize[i]<<"\n";
     }
+    
     // up to this point was metadata decoding
     for(int i = 0; i < numofFields; i++) {
       // decodingIdx is the staring bytes.
@@ -402,7 +420,7 @@ Data* Decoder::PrimitiveTypeDecode(char* charBytes) {
     std::cout<<"                                                        "<<data->Value()<<"\n";
   }
   else {
-    std::cerr<<"FATAL ERROR : Failed to Decode\n";
+    std::cerr<<"ERROR : Failed to Decode\n";
   }
   return data;
 }

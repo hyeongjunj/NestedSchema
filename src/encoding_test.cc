@@ -17,15 +17,15 @@ TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
   */
   Schema schema("NextedExample");
   schema.add_field("field1",
-      STRUCT()->add("nf1", STRING("ABCDE"))
-              ->add("nf2", STRUCT()->add("nnf1", MAP(STRING("ABC"), STRING("AB")))));
+      STRUCT()->add("nf1", STRING("1234"))
+              ->add("nf2", STRUCT()->add("nnf1", MAP(STRING("1234"), STRING("1234")))));
   schema.add_field("field2",
-      ARRAY("STRUCT")->add(STRUCT()->add("nf2", STRING("ABCDEFGHIJKLMNOPQ"))
-                                   ->add("nf3", STRING("ABCDEFGHIJ")))
-                     ->add(STRUCT()->add("nf2", STRING("ABCDOPQ"))
-                                   ->add("nf3", STRING("QWERT")))
-                     ->add(STRUCT()->add("nf2", STRING("ABCDEFGHIJKLM"))
-                                   ->add("nf3", STRING("ABCDEFGH"))));
+      ARRAY("STRUCT")->add(STRUCT()->add("nf2", STRING("1234"))
+                                   ->add("nf3", STRING("1234")))
+                     ->add(STRUCT()->add("nf2", STRING("1234"))
+                                   ->add("nf3", STRING("1234")))
+                     ->add(STRUCT()->add("nf2", STRING("1234"))
+                                   ->add("nf3", STRING("1234"))));
   Encoder e1,e2;
   Decoder d;
   Bytes bytes1 = e1.encode(schema);
@@ -48,15 +48,15 @@ assets: Array<String>
 */
 TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
   Schema schema("Person");
-  schema.add_field("first_name", STRING("HYEONGJUN")); 
-  schema.add_field("last_name", STRING("JEON")); 
-  schema.add_field("age", I8("27")); 
-  schema.add_field("salary", I32("0"));
-  schema.add_field("address", STRUCT()->add("street", STRING("TONGIL"))
+  schema.add_field("fi rstna me", STRING("HYEON GJUN")); 
+  schema.add_field("lastn ame", STRING("JEON")); 
+  schema.add_field("ag e", I8("27")); 
+  schema.add_field("sala ry", I32("0"));
+  schema.add_field("ad dr ess", STRUCT()->add("street", STRING("dasdsdasdas"))
                                       ->add("city", STRING("SEOUL"))
-                                      ->add("country", STRING("Republic of Korea")));
-  schema.add_field("properties", MAP(STRING("IHAVE"),STRING("NOTHING")));
-  schema.add_field("assets", ARRAY("STRING")->add(STRING("HOUSE"))
+                                      ->add("country", STRING("Republ icn")));
+  schema.add_field("prop ert ies", MAP(STRING("IHAVE"),STRING("NOTHING")));
+  schema.add_field("asse ts", ARRAY("STRING")->add(STRING("HOUSE"))
                                             ->add(STRING("CAR"))
                                             ->add(STRING("PRIVATE JET")));
   Encoder e1,e2;
@@ -67,7 +67,7 @@ TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
 }  
 
 TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
-  Schema schema;
+  Schema schema("TEST3");
   schema.add_field("field1", STRING("ABC"));
   schema.add_field("field2", STRUCT()->add("nf1", MAP(STRING("FED"), STRING("CKOE"))));
   schema.add_field("field3", STRUCT()->add("nf2", MAP(ARRAY("STRING")->add(STRING("DSAD"))

@@ -1,10 +1,7 @@
 #include "encoding.h"
 #include "gtest/gtest.h"
 using namespace nestedSchema;
-  std::ostream& operator<< (std::ostream& os, std::byte b) {
-    return os << std::bitset<8>(std::to_integer<int>(b));
-  }
-/*
+
 int main() {
   
   Struct* a1 = new Struct();
@@ -75,7 +72,7 @@ int main() {
   Schema schema2;
   schema2.AddElement("s2", s);
 
-  Schema sch("testschema");
+  //Schema sch("testschema");
   
 
   //Bytes bytes_1 = e.encode(schema2);
@@ -86,9 +83,8 @@ int main() {
   Bytes bytes2_2 = E1.encode(d.decode(bytes1_1));
   if(bytes1 == bytes2) std::cout<<"SUCCESS\n";
   if(bytes1_1 == bytes2_2) std::cout<<"SUCCESS\n";
-
+/*
   Schema tg("Person");
-
+*/
   return 0;
 }
-*/

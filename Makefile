@@ -33,5 +33,5 @@ encoding.o : src/encoding.cc $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/encoding.cc
 encoding_test : encoding_test.o encoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
-main_test : encoding_test.o encoding.o gtest_main.a
+main_test : main.o encoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
