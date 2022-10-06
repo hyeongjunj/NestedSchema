@@ -8,13 +8,14 @@ decode it, store its byte-stream output and re-encoding it.
 If encoding and decoding works properly, 
 those two byte-stream output should be the same.
 */
-
-TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
-  /*
+/*
   NestedExample  
   field1: Struct {nf1: String, nf2: Struct { nnf1: Map<String, String> }} 
   field2: Array<Struct {nf2: String, nf3: String }
   */
+ 
+TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
+  
   Schema schema("NextedExample");
   schema.add_field("field1",
       STRUCT()->add("nf1", STRING("1234"))
@@ -32,6 +33,7 @@ TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
   Bytes bytes2 = e2.encode(d.decode(bytes1));
   EXPECT_EQ(bytes1, bytes2);
 }
+
 /*
 Person {
 first_name: String,
@@ -46,17 +48,18 @@ properties: Map<String, String>
 assets: Array<String> 
 }
 */
+
 TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
   Schema schema("Person");
-  schema.add_field("fi rstna me", STRING("HYEON GJUN")); 
-  schema.add_field("lastn ame", STRING("JEON")); 
-  schema.add_field("ag e", I8("27")); 
-  schema.add_field("sala ry", I32("0"));
-  schema.add_field("ad dr ess", STRUCT()->add("street", STRING("dasdsdasdas"))
+  schema.add_field("first name", STRING("HYEON JEON")); 
+  schema.add_field("last name", STRING("JEON")); 
+  schema.add_field("age", I8("27")); 
+  schema.add_field("salay", I32("0"));
+  schema.add_field("address", STRUCT()->add("street", STRING("12323456"))
                                       ->add("city", STRING("SEOUL"))
                                       ->add("country", STRING("Republ icn")));
-  schema.add_field("prop ert ies", MAP(STRING("IHAVE"),STRING("NOTHING")));
-  schema.add_field("asse ts", ARRAY("STRING")->add(STRING("HOUSE"))
+  schema.add_field("properties", MAP(STRING("IHAVE"),STRING("NOTHING")));
+  schema.add_field("assets", ARRAY("STRING")->add(STRING("HOUSE"))
                                             ->add(STRING("CAR"))
                                             ->add(STRING("PRIVATE JET")));
   Encoder e1,e2;
@@ -68,7 +71,7 @@ TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
 
 TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
   Schema schema("TEST3");
-  schema.add_field("field1", STRING("ABC"));
+  schema.add_field("field1", STRING("12345678"));
   schema.add_field("field2", STRUCT()->add("nf1", MAP(STRING("FED"), STRING("CKOE"))));
   schema.add_field("field3", STRUCT()->add("nf2", MAP(ARRAY("STRING")->add(STRING("DSAD"))
                                                                      ->add(STRING("DSAV"))
