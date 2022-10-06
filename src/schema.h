@@ -5,7 +5,17 @@
 #include <bitset>
 #include <queue>
 #include <iostream>
-
+/*                
+#define MAP
+#define ARRAY
+#define STRING
+#define INT8
+#define INT16
+#define INT
+#define INT
+#define FLOAT
+#define FLOAT
+*/
 typedef std::vector<std::byte> Bytes;
 /*
 enum DATATYPE
@@ -63,16 +73,29 @@ class Array : public Data {
 private:
   std::vector<Data*> array_;
   std::string data_type_;
+  std::string element_type_;
 public:
   Array() {
     SetType("ARRAY", false);
+  }
+  Array(std::string element_type) {
+    SetType("ARRAY", false);
+    element_type_.assign(element_type, element_type.size());
   }
   Array(Data* data) {
     SetType("ARRAY", false);
     data_type_.assign(data->Type(), sizeof(data->Type()));
   }
   void Add2Array(Data* data) {
+    if(data->Type().compare(element_type_) != 0) {
+      //std::cerr<<"[ERROR] Type mismatch!\n";
+      //return;
+    }
     array_.push_back(data);
+  }
+  Array* add(Data* data) {
+    array_.push_back(data);
+    return this;
   }
   virtual int numofElements() override {
     return array_.size();
@@ -94,6 +117,11 @@ public:
     struct_.push_back(data);
     field_name_.push_back(field);
   }
+  Struct* add(std::string field, Data* data) {
+    struct_.push_back(data);
+    field_name_.push_back(field);
+    return this;
+  }
   virtual int numofElements() override {
     return struct_.size();
   }
@@ -104,7 +132,6 @@ public:
 class Map : public Data {
 private:
   std::vector<Data*> map_;
-  //int offset_[2];
 public:
   Map(Data* key, Data* value) {
     map_.push_back(key);
@@ -121,27 +148,38 @@ public:
 class Schema {
 private:
   std::unordered_map<std::string, Data*> SchemaElements_;
-  /*
-  store the list in form of <field name, value>
-  supported datatypes are :
-  MAP, STRUCT, LIST and PRIMITIVES
-  */
+  Struct* struct_;
+  Data* schema_;
+  std::string name_;
 public:
+  Schema() {}
+  Schema(std::string name) {
+    name_ = name;
+  }
   ~Schema() {}
-  //void GetFieldInput(std::string input);
   void AddElement(std::string field_name, Data* data) {
     SchemaElements_.insert({field_name, data});
+    schema_ = data;
   }
-  const std::unordered_map<std::string, Data*>& Get() {
-    return SchemaElements_;
+  Data* Get() {
+    return schema_;
   }
-  Data* STRING(std::string str) {
-    return new Primitive("STRING", str);
-  }
-  Data* MAP(Data* key, Data* value) {
-    return new Map(key, value);
-  }
-  Data* ARRAY(Data* data) {
-    return new Array();
+  void addField(std::string field_name, Data* data) {
+    struct_->Add2Struct(field_name, data);
   }
 };
+
+namespace nestedSchema {
+  inline Primitive* STRING(std::string str) {
+    return new Primitive("STRING", str);
+  }
+  inline Map* MAP(Data* key, Data* value) {
+    return new Map(key, value);
+  }
+  inline Array* ARRAY(std::string type) {
+    return new Array(type);
+  }
+  inline Struct* STRUCT() {
+    return new Struct();
+  }  
+} 

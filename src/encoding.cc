@@ -240,48 +240,39 @@ void Encoder::EncodePrimitiveType(Data* data) {
 
 Bytes Encoder::encode(Schema& schema) {
   // we have to traverse the schema for encoding 
-  for(const auto& fields : schema.Get()) {
-    // fields.first is field name,
-    // fields.second is value(Data type)
-    if(fields.second->isPrimitive()) { // end of the traversal tree
-      std::cout<<fields.second->Value()<<"\n";
-    } else { // we have to traverse deep into this data type
-             // struct, map, list type
-      std::stack<Data*> TraverseStack;
-      std::stack<std::pair<Data*, int>> MetaStack;
-      //std::stack<std::pair<Data*, int>> EncodingMetaStack;
-      TraverseStack.push(fields.second);
-      int encodingIdx = 0;
+  std::stack<Data*> TraverseStack;
+  std::stack<std::pair<Data*, int>> MetaStack;
 
-      while(!TraverseStack.empty()) {
-        if(TraverseStack.top()->isPrimitive()) {
-          std::cout<<TraverseStack.top()->Value()<<" "<<encodingIdx<<"\n";
-          EncodePrimitiveType(TraverseStack.top());
-          TraverseStack.pop();
-        } else {
-          meta_offset[encodingIdx] = -1;
+  TraverseStack.push(schema.Get());
+  int encodingIdx = 0;
+
+  while(!TraverseStack.empty()) {
+    if(TraverseStack.top()->isPrimitive()) {
+      std::cout<<TraverseStack.top()->Value()<<" "<<encodingIdx<<"\n";
+      EncodePrimitiveType(TraverseStack.top());
+      TraverseStack.pop();
+    } else {
+      meta_offset[encodingIdx] = -1;
           
-          std::cout<<"Type : "<<TraverseStack.top()->Type()<<" "<<encodingIdx<<"\n";
-          PrepareEncodingMeta();
-          MetaStack.push({TraverseStack.top(), encodingIdx}); 
+      std::cout<<"Type : "<<TraverseStack.top()->Type()<<" "<<encodingIdx<<"\n";
+      PrepareEncodingMeta();
+      MetaStack.push({TraverseStack.top(), encodingIdx}); 
           
-          Data* popedElement = TraverseStack.top();
-          TraverseStack.pop();
+      Data* popedElement = TraverseStack.top();
+      TraverseStack.pop();
           
-          for(int i = popedElement->Get().size() -1; i >= 0; i--) {
-            TraverseStack.push(popedElement->Get()[i]);       
-          }
-        }
-        encodingIdx++;
-      }
-      for(int i = meta_offset.size()-1; i >= 0 ; i--) {
-        //std::cout<<"--------> "<<MetaStack.top().first->Type()<<"\n";
-        EncodingMeta(MetaStack.top().first, MetaStack.top().second);
-        MetaStack.pop();
+      for(int i = popedElement->Get().size() -1; i >= 0; i--) {
+        TraverseStack.push(popedElement->Get()[i]);       
       }
     }
+    encodingIdx++;
+  }
+  for(int i = meta_offset.size()-1; i >= 0 ; i--) {
+    EncodingMeta(MetaStack.top().first, MetaStack.top().second);
+    MetaStack.pop();
   }
   Bytes bytestream;
+  std::cout<<"Final Stage..\n";
   for(std::pair<Bytes, Data*> bytes : encodeStream_) {
     std::cout<<bytes.first.size()<<" bytes..\n";
     for(std::byte b : bytes.first) {
