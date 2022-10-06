@@ -163,4 +163,22 @@ namespace nestedSchema {
   inline Struct* STRUCT() {
     return new Struct();
   }  
+  inline Primitive* I8(std::string str) {
+    return new Primitive("I8", str);
+  }
+  inline Primitive* I16(std::string str) {
+    return new Primitive("I16", str);
+  }
+  inline Primitive* I32(std::string str) {
+    return new Primitive("I32", str);
+  }
+  inline Primitive* I64(std::string str) {
+    return new Primitive("I64", str);
+  }
+  inline Primitive* F32(std::string str) {
+    return new Primitive("F32", str);
+  }
+  inline Primitive* F64(std::string str) {
+    return new Primitive("F64", str);
+  }
 } 

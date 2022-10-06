@@ -8,25 +8,76 @@ decode it, store its byte-stream output and re-encoding it.
 If encoding and decoding works properly, 
 those two byte-stream output should be the same.
 */
-// Schema 1
-/*
-NestedExample 
-field1: Struct {nf1: String, nf2: Struct { nnf1: Map<String, String> }} 
-field2: Array<Struct {nf2: String, nf3: String }
-*/
+
 TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
-  Schema schema1;
-  schema1.add_field("field1",
+  /*
+  NestedExample  
+  field1: Struct {nf1: String, nf2: Struct { nnf1: Map<String, String> }} 
+  field2: Array<Struct {nf2: String, nf3: String }
+  */
+  Schema schema("NextedExample");
+  schema.add_field("field1",
       STRUCT()->add("nf1", STRING("ABCDE"))
               ->add("nf2", STRUCT()->add("nnf1", MAP(STRING("ABC"), STRING("AB")))));
-  schema1.add_field("field2",
+  schema.add_field("field2",
       ARRAY("STRUCT")->add(STRUCT()->add("nf2", STRING("ABCDEFGHIJKLMNOPQ"))
-                     ->add("nf3", STRING("ABCDEFGHIJ"))));
+                                   ->add("nf3", STRING("ABCDEFGHIJ")))
+                     ->add(STRUCT()->add("nf2", STRING("ABCDOPQ"))
+                                   ->add("nf3", STRING("QWERT")))
+                     ->add(STRUCT()->add("nf2", STRING("ABCDEFGHIJKLM"))
+                                   ->add("nf3", STRING("ABCDEFGH"))));
   Encoder e1,e2;
   Decoder d;
-  Bytes bytes1 = e1.encode(schema1);
+  Bytes bytes1 = e1.encode(schema);
   Bytes bytes2 = e2.encode(d.decode(bytes1));
   EXPECT_EQ(bytes1, bytes2);
 }
-
+/*
+Person {
+first_name: String,
+last_name: String,
+age: i8
+salary: i32,
+address: Struct {street: String, 
+                 city: String, 
+                 state: String, 
+                 zip: String } 
+properties: Map<String, String>
+assets: Array<String> 
+}
+*/
 TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
+  Schema schema("Person");
+  schema.add_field("first_name", STRING("HYEONGJUN")); 
+  schema.add_field("last_name", STRING("JEON")); 
+  schema.add_field("age", I8("27")); 
+  schema.add_field("salary", I32("0"));
+  schema.add_field("address", STRUCT()->add("street", STRING("TONGIL"))
+                                      ->add("city", STRING("SEOUL"))
+                                      ->add("country", STRING("Republic of Korea")));
+  schema.add_field("properties", MAP(STRING("IHAVE"),STRING("NOTHING")));
+  schema.add_field("assets", ARRAY("STRING")->add(STRING("HOUSE"))
+                                            ->add(STRING("CAR"))
+                                            ->add(STRING("PRIVATE JET")));
+  Encoder e1,e2;
+  Decoder d;
+  Bytes bytes1 = e1.encode(schema);
+  Bytes bytes2 = e2.encode(d.decode(bytes1));
+  EXPECT_EQ(bytes1, bytes2);
+}  
+
+TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
+  Schema schema;
+  schema.add_field("field1", STRING("ABC"));
+  schema.add_field("field2", STRUCT()->add("nf1", MAP(STRING("FED"), STRING("CKOE"))));
+  schema.add_field("field3", STRUCT()->add("nf2", MAP(ARRAY("STRING")->add(STRING("DSAD"))
+                                                                     ->add(STRING("DSAV"))
+                                                                     ->add(STRING("DSADS")),
+                                                      MAP(STRING("BBB"), STRING("CDA"))))
+                                     ->add("nf3", STRING("DSADASFEQG")));
+  Encoder e1,e2;
+  Decoder d;
+  Bytes bytes1 = e1.encode(schema);
+  Bytes bytes2 = e2.encode(d.decode(bytes1));
+  EXPECT_EQ(bytes1, bytes2);
+}  

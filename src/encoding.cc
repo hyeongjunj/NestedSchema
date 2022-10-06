@@ -261,7 +261,6 @@ Bytes Encoder::encode(Schema& schema) {
       TraverseStack.pop();
     } else {
       meta_offset[encodingIdx] = -1;
-          
       std::cout<<"Type : "<<TraverseStack.top()->Type()<<" "<<encodingIdx<<"\n";
       PrepareEncodingMeta();
       MetaStack.push({TraverseStack.top(), encodingIdx}); 
