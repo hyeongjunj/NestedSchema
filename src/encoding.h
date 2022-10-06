@@ -8,15 +8,16 @@
 #include <iostream>
 #include "schema.h"
 #define    TYPEMETA    1
-inline std::unordered_map<int, int> meta_offset;
+//inline std::unordered_map<int, int> meta_offset;
 // <encodingIdx, endpoint>
-inline std::unordered_map<int, int> meta_size_offset;
+//inline std::unordered_map<int, int> meta_size_offset;
 // <encodingIdx, size>
 class Encoder {
 private:
   std::vector<std::pair<Bytes, Data*>> encodeStream_;
-  //std::vector<std::pair<int, int>> meta_offset_;
-  //std::unordered_map<int, int> meta_offset_;
+  std::unordered_map<int, int> meta_offset;
+  std::unordered_map<int, int> meta_size_offset;
+  
   // <encodingIdx, endpoint> 
 public:
   Bytes encode(Schema& schema);

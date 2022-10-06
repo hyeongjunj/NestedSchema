@@ -5,33 +5,7 @@
 #include <bitset>
 #include <queue>
 #include <iostream>
-/*                
-#define MAP
-#define ARRAY
-#define STRING
-#define INT8
-#define INT16
-#define INT
-#define INT
-#define FLOAT
-#define FLOAT
-*/
 typedef std::vector<std::byte> Bytes;
-/*
-enum DATATYPE
-{
-  INT8,
-  INT16,
-  INT32,
-  INT64,
-  FLOAT32,
-  FLOAT64,
-  STRING,
-  ARRAY,
-  STRUCT,
-  MAP
-};
-*/
 
 class Data {
 private:
@@ -53,7 +27,7 @@ public:
   std::string Value() {return value_;}
   virtual int numofElements() {return 0;}
   virtual const std::vector<Data*>& Get() {
-    std::cout<<"[FATAL ERROR] : Invalid Access!\n"; 
+    std::cout<<"[ERROR] : Invalid Access\n"; 
     return {};} 
   // TODO : FIX THIS! This Get() will not be used in Primitive class
   // So we need some nicer design for this..
@@ -154,7 +128,7 @@ public:
 
 class Schema {
 private:
-  std::unordered_map<std::string, Data*> SchemaElements_;
+  //std::unordered_map<std::string, Data*> SchemaElements_;
   Struct* struct_;
   Data* schema_;
   std::string name_;
@@ -165,14 +139,14 @@ public:
   }
   ~Schema() {}
   void AddElement(std::string field_name, Data* data) {
-    SchemaElements_.insert({field_name, data});
+    //SchemaElements_.insert({field_name, data});
     schema_ = data;
   }
   Data* Get() {
     return schema_;
   }
-  void addField(std::string field_name, Data* data) {
-    struct_->Add2Struct(field_name, data);
+  void add_field(std::string schema_name, Data* data) {
+    schema_ = data;
   }
 };
 

@@ -1,8 +1,10 @@
 #include "encoding.h"
+#include "gtest/gtest.h"
 using namespace nestedSchema;
   std::ostream& operator<< (std::ostream& os, std::byte b) {
     return os << std::bitset<8>(std::to_integer<int>(b));
   }
+/*
 int main() {
   
   Struct* a1 = new Struct();
@@ -30,12 +32,7 @@ int main() {
   s2->Add2Struct("1", s);
   s2->Add2Struct("2", new Primitive("STRING", "last"));
   
-  /*
-  Struct
-    nf1 string(v5)
-    nf2 Struct{nnf1 : Map(v6,v7)}
-    nf3 Struct{v8, Map(v9, arr(a1,a2,a3))}
-  */
+
   Struct* ss = new Struct();
   Struct* ns = new Struct();
   ns->Add2Struct("nf1", new Primitive("STRING", "1234567890"));
@@ -73,7 +70,7 @@ int main() {
   NN->Add2Struct("field1", N);
   NN->Add2Struct("field2", ar);
   schema.AddElement("f4", NN);
-  Encoder e,E;
+  Encoder e,E,e1,E1;
   Decoder d;
   Schema schema2;
   schema2.AddElement("s2", s);
@@ -81,16 +78,17 @@ int main() {
   Schema sch("testschema");
   
 
-  Bytes bytes_1 = e.encode(schema2);
-  Bytes bytes_2 = E.encode(d.decode(bytes_1));
-  //Bytes bytes1 = E.encode(schema);
-  //Bytes bytes2 = E.encode(D.decode(bytes1));
-  //Bytes bytes1_1 = e.encode(schema2);
-  //Bytes bytes2_2 = E.encode(d.decode(bytes1_1));
-  //if(bytes1 == bytes2) std::cout<<"SUCCESS\n";
-  if(bytes_1 == bytes_2) std::cout<<"SUCCESS\n";
+  //Bytes bytes_1 = e.encode(schema2);
+  //Bytes bytes_2 = E.encode(d.decode(bytes_1));
+  Bytes bytes1 = E.encode(schema);
+  Bytes bytes2 = e.encode(d.decode(bytes1));
+  Bytes bytes1_1 = e1.encode(schema2);
+  Bytes bytes2_2 = E1.encode(d.decode(bytes1_1));
+  if(bytes1 == bytes2) std::cout<<"SUCCESS\n";
+  if(bytes1_1 == bytes2_2) std::cout<<"SUCCESS\n";
 
   Schema tg("Person");
 
   return 0;
 }
+*/
