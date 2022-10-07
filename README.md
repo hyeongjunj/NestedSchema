@@ -14,7 +14,7 @@ In working directory, run following command :
 
 ## Test
 
-There are two types of Test,
+There are two types of test,
 `schema_test` and `encoding_test`.
 
 `schema_test` is for testing whether this project data structure store nested schema properly, so if we traverse the data structure, it tests whether all the schema's element which is traversed is identical(and the order of element too.) to the original schema's.
