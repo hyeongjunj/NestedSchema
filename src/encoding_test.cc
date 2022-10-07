@@ -1,6 +1,7 @@
 #include "encoding.h"
 #include "gtest/gtest.h"
 using namespace nestedSchema;
+
 /*
 This TEST tests whether nested schema can be encoded and decoded properly.
 In order to test this, we choose to encode certain nested schema and
@@ -8,6 +9,7 @@ decode it, store its byte-stream output and re-encoding it.
 If encoding and decoding works properly, 
 those two byte-stream output should be the same.
 */
+
 /*
   NestedExample  
   field1: Struct {nf1: String, nf2: Struct { nnf1: Map<String, String> }} 
@@ -53,7 +55,7 @@ TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
   Schema schema("Person");
   schema.add_field("first name", STRING("HYEON JEON")); 
   schema.add_field("last name", STRING("JEON"));
-  schema.add_field("height(cm)", F64("178.4"));  
+  schema.add_field("height(cm)", I16("180"));  
   schema.add_field("weight(KG)", I32("65")); 
   schema.add_field("salay", STRING("0"));
   schema.add_field("address", STRUCT()->add("street", STRING("HongJae Chungu 3-cha Apartment"))
@@ -86,9 +88,9 @@ TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
   EXPECT_EQ(bytes1, bytes2);
 }  
 
-TEST(VARIANT_TEST, HANDLES_VARIANT_1) {
+TEST(VARIANT_TEST, HANDLES_VARIANT) {
   
-  Schema schema("VariantHandle");
+  Schema schema("Variant_Handle_Test");
   Array* arr = ARRAY("STRUCT");
   // For 5000 array elements, we need element length metadata(5000)
   // that 1 byte is not sufficient to store it.

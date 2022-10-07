@@ -26,9 +26,7 @@ public:
   std::string Type() {return data_type_;}
   std::string Value() {return value_;}
   virtual int numofElements() {return 0;}
-  virtual const std::vector<Data*>& Get() {
-    std::cout<<"[ERROR] : Invalid Access\n"; 
-    return {};} 
+  virtual const std::vector<Data*>& Get() {return {};}
 };
 
 class Primitive : public Data {

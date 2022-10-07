@@ -1,7 +1,7 @@
 GTEST_DIR=third-party/googletest/googletest
 USER_DIR=.
 CPPFLAGS += -isystem $(GTEST_DIR)/include
-CXXFLAGS += -g -pthread -std=c++17
+CXXFLAGS += -g -w -pthread -std=c++17
 
 TESTS = encoding_test	schema_test
 
