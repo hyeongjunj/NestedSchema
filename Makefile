@@ -31,7 +31,9 @@ schema_test.o : src/schema_test.cc $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/schema_test.cc
 encoding.o : src/encoding.cc $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/encoding.cc
-schema_test : schema_test.o encoding.o gtest_main.a
+decoding.o : src/decoding.cc $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/decoding.cc
+schema_test : schema_test.o encoding.o decoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
-encoding_test : encoding_test.o encoding.o gtest_main.a
+encoding_test : encoding_test.o encoding.o decoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@

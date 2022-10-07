@@ -90,13 +90,13 @@ TEST(VARIANT_TEST, HANDLES_VARIANT_1) {
   
   Schema schema("VariantHandle");
   Array* arr = ARRAY("STRUCT");
-  // For 10000 array elements, we need element length metadata(10000)
+  // For 5000 array elements, we need element length metadata(5000)
   // that 1 byte is not sufficient to store it.
   // For handling this, all length metadata is recorded 
   // supporting variant length.
   // This test's purpose is to test whether our encoding/decoding
   // supports variant types. 
-  for(int i = 0; i < 10000; i++) {
+  for(int i = 0; i < 5000; i++) {
     arr->add(STRING("array"));
   }
   schema.add_field("field2", arr);
