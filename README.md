@@ -16,18 +16,6 @@ make
 
 ## Test
 
-There are two types of Test,
-```sh
-schema_test
-```
-```sh
-encoding_test
-```
-=======
-`make`
-
-## Test
-
 After build the project, there will be two types of test available in the working directory,
 `schema_test` and `encoding_test`.
 
