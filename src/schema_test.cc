@@ -1,19 +1,38 @@
 #include "encoding.h"
 #include "gtest/gtest.h"
+#include <stack>
 using namespace nestedSchema;
 /*
-This TEST tests whether nested schema can be encoded and decoded properly.
-In order to test this, we choose to encode certain nested schema and
-decode it, store its byte-stream output and re-encoding it. 
-If encoding and decoding works properly, 
-those two byte-stream output should be the same.
+This TEST tests whether nested schema can be stored properly in this
+data structure.
+After the input of schema, we traverse schema, check each of field is 
+stored correctly or not.
 */
 /*
   NestedExample  
   field1: Struct {nf1: String, nf2: Struct { nnf1: Map<String, String> }} 
   field2: Array<Struct {nf2: String, nf3: String }
 */
- 
+std::vector<std::string> SchemaTraverse(Schema& schema) {
+  std::vector<std::string> ret;
+  Data* root = schema.Get();
+  std::stack<Data*> Stack;
+  Stack.push(root);
+  while(!Stack.empty()) {
+    Data* topedElement = Stack.top();
+    if(topedElement->isPrimitive()) {
+      ret.push_back(topedElement->Value());
+      Stack.pop();
+    } else {
+      Stack.pop();
+      for(int i = topedElement->Get().size() -1; i >= 0; i--) {
+        Stack.push(topedElement->Get()[i]);       
+      }
+    }
+  }
+  return ret;
+}
+
 TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
   
   Schema schema("NestedExample");
@@ -27,11 +46,12 @@ TEST(ENCODING_TEST_1, HANDLES_NESTED_TYPE_1) {
                                    ->add("nf3", STRING("JIOJIJOIJO")))
                      ->add(STRUCT()->add("nf2", STRING("DDDDDD"))
                                    ->add("nf3", STRING("KOUIYTUOIJIIO"))));
-  Encoder e1,e2;
-  Decoder d;
-  Bytes bytes1 = e1.encode(schema);
-  Bytes bytes2 = e2.encode(d.decode(bytes1));
-  EXPECT_EQ(bytes1, bytes2);
+  std::vector<std::string> elements = 
+    {"NestedExample", "ABCD", "AB", "HKMK", "FEWDSF", "ABCDEFS", "BJIOJW", 
+     "JIOJIJOIJO", "DDDDDD", "KOUIYTUOIJIIO"};
+     
+  EXPECT_EQ(SchemaTraverse(schema), elements);
+  
 }
 
 /*
@@ -51,23 +71,25 @@ assets: Array<String>
 
 TEST(ENCODING_TEST_2, HANDLES_NESTED_TYPE_2) {
   Schema schema("Person");
-  schema.add_field("first name", STRING("HYEON JEON")); 
+  schema.add_field("first name", STRING("HYEONGJUN")); 
   schema.add_field("last name", STRING("JEON"));
   schema.add_field("height(cm)", F64("178.87"));  
   schema.add_field("weight(KG)", F32("65.3")); 
   schema.add_field("salay", I32("0"));
   schema.add_field("address", STRUCT()->add("street", STRING("HongJae Chungu 3-cha Apartment"))
                                       ->add("city", STRING("SEOUL"))
-                                      ->add("country", STRING("123")));
+                                      ->add("country", STRING("KOREA")));
   schema.add_field("properties", MAP(STRING("IHAVE"),STRING("NOTHING")));
   schema.add_field("assets", ARRAY("STRING")->add(STRING("HOUSE"))
                                             ->add(STRING("CAR"))
                                             ->add(STRING("PRIVATE JET")));
-  Encoder e1,e2;
-  Decoder d;
-  Bytes bytes1 = e1.encode(schema);
-  Bytes bytes2 = e2.encode(d.decode(bytes1));
-  EXPECT_EQ(bytes1, bytes2);
+
+  std::vector<std::string> elements = 
+    {"Person", "HYEONGJUN", "JEON", "178.87", "65.3", "0",
+     "HongJae Chungu 3-cha Apartment", "SEOUL", "KOREA", "IHAVE", "NOTHING", 
+     "HOUSE", "CAR", "PRIVATE JET"};
+
+  EXPECT_EQ(SchemaTraverse(schema), elements);
 }  
 
 TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
@@ -79,9 +101,10 @@ TEST(ENCODING_TEST_3, HANDLES_NESTED_TYPE_3) {
                                                                      ->add(STRING("DSADS")),
                                                       MAP(STRING("BBB"), STRING("CDA"))))
                                      ->add("nf3", STRING("DSADASFEQG")));
-  Encoder e1,e2;
-  Decoder d;
-  Bytes bytes1 = e1.encode(schema);
-  Bytes bytes2 = e2.encode(d.decode(bytes1));
-  EXPECT_EQ(bytes1, bytes2);
+
+  std::vector<std::string> elements = 
+    {"TEST3", "12345678", "FED", "CKOE", "DSAD", "DSAV", "DSADS",
+     "BBB", "CDA", "DSADASFEQG"};
+
+  EXPECT_EQ(SchemaTraverse(schema), elements);
 }  

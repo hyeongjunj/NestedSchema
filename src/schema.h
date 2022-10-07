@@ -136,22 +136,20 @@ public:
   Schema() {}
   Schema(std::string name) {
     struct_ = new Struct(); 
-    struct_->Add2Struct("Schema Name", new Primitive("STRING", name));
+    struct_->add("Schema Name", new Primitive("STRING", name));
     name_ = name;
     schema_ = struct_;
     
   }
   ~Schema() {}
   void AddElement(std::string field_name, Data* data) {
-    //SchemaElements_.insert({field_name, data});
     schema_ = data;
   }
   Data* Get() {
     return schema_;
   }
-  void add_field(std::string schema_name, Data* data) {
-    struct_->add(schema_name, data);
-    //schema_ = data;
+  void add_field(std::string field_name, Data* data) {
+    struct_->add(field_name, data);
   }
 };
 

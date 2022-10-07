@@ -301,7 +301,7 @@ Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
       fieldSize[i] = VariantDecoder(charBytes + decodingIdx, decodingIdx);
     }
     for(int i = 0; i < numofFields; i++) {
-      str->Add2Struct(fieldName[i], PartialDecode(charBytes + decodingIdx, 
+      str->add(fieldName[i], PartialDecode(charBytes + decodingIdx, 
                                decodingIdx + fieldSize[i] -1));
       decodingIdx += fieldSize[i];
     }

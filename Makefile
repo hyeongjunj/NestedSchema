@@ -3,7 +3,7 @@ USER_DIR=.
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 CXXFLAGS += -g -pthread -std=c++17
 
-TESTS = main_test encoding_test
+TESTS = encoding_test	schema_test
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
@@ -27,11 +27,11 @@ gtest_main.a : gtest-all.o gtest_main.o
 
 encoding_test.o : src/encoding_test.cc $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/encoding_test.cc
-main.o : src/main.cc $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/main.cc
+schema_test.o : src/schema_test.cc $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/schema_test.cc
 encoding.o : src/encoding.cc $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/encoding.cc
-encoding_test : encoding_test.o encoding.o gtest_main.a
+schema_test : schema_test.o encoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
-main_test : main.o encoding.o gtest_main.a
+encoding_test : encoding_test.o encoding.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
