@@ -15,7 +15,7 @@ private:
   int type_size_;
 public:
   Data(){isPrimitive_ = false;} 
-  ~Data(){}
+  virtual ~Data(){}
   int Size() {return type_size_;}
   void SetType(std::string data_type, bool tf) {
     data_type_ = data_type;
@@ -29,8 +29,6 @@ public:
   virtual const std::vector<Data*>& Get() {
     std::cout<<"[ERROR] : Invalid Access\n"; 
     return {};} 
-  // TODO : FIX THIS! This Get() will not be used in Primitive class
-  // So we need some nicer design for this..
 };
 
 class Primitive : public Data {
@@ -61,10 +59,6 @@ public:
     data_type_.assign(data->Type(), sizeof(data->Type()));
   }
   void Add2Array(Data* data) {
-    if(data->Type().compare(element_type_) != 0) {
-      //std::cerr<<"[ERROR] Type mismatch!\n";
-      //return;
-    }
     array_.push_back(data);
   }
   Array* add(Data* data) {
@@ -128,7 +122,6 @@ public:
 
 class Schema {
 private:
-  //std::unordered_map<std::string, Data*> SchemaElements_;
   Struct* struct_;
   Data* schema_;
   std::string name_;

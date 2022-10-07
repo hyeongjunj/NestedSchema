@@ -1,26 +1,42 @@
 #include "encoding.h"
 #include <string>
 #include <cstdio>
+#include <bitset>
+#include <cmath>
 
-// for primitive types
+// for primitive types & metadata(e.g., length of element) 
+// element length should be encodeded with VarientEncoding
+// because the length size(bytes) is not fixed to certain bytes.
+// (E.g., one byte is enough for storing "5", but not for "1000")
 Bytes Encoder::VarientEncoding(int64_t value) {
-	Bytes encodedBytes;
-  if(value > 127) std::cout<<"ERROR!\n";
-  std::byte b{value};
-  encodedBytes.push_back(b);
-  char* charBytes = reinterpret_cast<char*>(encodedBytes.data());
-  
+	unsigned char MSB = 1;
+  MSB <<= 7;
+	std::vector<std::byte> encodedBytes;
+	unsigned char byte_;
+	std::vector<unsigned char> bytes_;
+	int idx = 0;
+  while(value != 0) {
+		byte_ = value & (MSB -1);
+		bytes_.push_back(byte_);
+		value >>= 7;
+		idx++;
+	}
+	for(int i = bytes_.size() -1; i >= 0; i--) {
+		if(i != 0) {
+			bytes_[i] = bytes_[i] | MSB;
+		}
+		std::byte b{bytes_[i]};
+		encodedBytes.push_back(b);
+	}
 	return encodedBytes;
 }
 
 void Encoder::StringEncoding(Data* data) {
   // for string type, type + length + string bytecode
-  // length should be encodeded with VarientEncoding
   Bytes bstream;
   
   Bytes type = TypeEncoding(data);
   Bytes length = VarientEncoding(data->Value().size());
-  
   for(std::byte b : type) bstream.push_back(b);
   for(std::byte b : length) bstream.push_back(b);
 
@@ -83,7 +99,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         nestedsize += bsize;
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
         if(DataTraverse == data->Get()[fieldNum - 1]) {
@@ -114,7 +129,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         nestedsize += bsize;
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
         if(DataTraverse == ValueType) {
@@ -164,7 +178,6 @@ void Encoder::EncodingMeta(Data* data, int meta_pos) {
         nestedsize += bsize;
         Bytes fieldSize = VarientEncoding(bsize);
         metadata_size += (int)fieldSize.size();
-
         Bytes length = VarientEncoding(bsize);
         for(std::byte b : length) metadata.push_back(b);
         
@@ -334,16 +347,31 @@ Data* Decoder::PartialDecode(char* charBytes, int endIdx) {
   return data;
 }
 
-int Decoder::VariantDecoder(char* start_point, int& offset) {
-  offset++; 
-  for(int i = 0; ; i++) {
-    if(start_point[i] & 128 == 128) { // TODO : Change this. This logic is not working
-      //std::cout<<"Variant Increase\n";
-      //offset++;
+int64_t Decoder::VariantDecoder(char* start_point, int& offset) {
+  offset++;
+  int idx = 0;
+  std::vector<char> charArray;
+  while(true) {
+    if(!!((start_point[idx] << 0) & 0x80)) {
+      charArray.push_back(start_point[idx]);
+      idx++; 
+      offset++;
+    } else {
+      charArray.push_back(start_point[idx]);
+      break;
     }
-    else break;
   }
-  return (int)start_point[0]; // TODO : have to be changed
+  if(idx == 0) return (int64_t)start_point[0];
+  for(int i = 0; i < charArray.size() -1; i++) {
+    charArray[i] <<= 1;
+    charArray[i] >>= 1;
+  }
+  int bitsNum = charArray.size() * 7;
+  int64_t ret = 0;
+  for(int i = 0; i < charArray.size(); i++) {
+    ret += (int64_t)pow(128, (charArray.size() -1 - i)) * ((int)charArray[i]);
+  }
+  return ret;
 }
 
 Data* Decoder::PrimitiveTypeDecode(char* charBytes) {
