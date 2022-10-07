@@ -1,7 +1,7 @@
 # NestedSchema
 
 Store Nested Schema & encode/decode the schema
-See [Benchmark](README.md#Benchmark) for more information about the binary formats.
+See [Binary Format](BinaryFormat.md) for more information about the binary formats.
 
 ## Author
 
